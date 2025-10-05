@@ -1,0 +1,11 @@
+[project]
+name = "claude-agent-on-agentcore"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "awslabs-aws-documentation-mcp-server>=1.1.8",
+    "bedrock-agentcore>=0.1.7",
+    "claude-agent-sdk>=0.1.0",
+]
