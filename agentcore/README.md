@@ -13,3 +13,10 @@ aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS 
 
 docker buildx build --platform linux/arm64 -t ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${AGENT_NAME}:latest --push .
 ```
+
+set Environment variables (Management Console)
+
+```
+GITHUB_TOKEN
+JINA_API_KEY
+```
