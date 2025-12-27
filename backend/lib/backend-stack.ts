@@ -1,16 +1,37 @@
+import * as agentcore from '@aws-cdk/aws-bedrock-agentcore-alpha';
+import * as bedrock from '@aws-cdk/aws-bedrock-alpha';
 import * as cdk from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
+import path from 'path';
 
 export class BackendStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // The code that defines your stack goes here
+    const agentRuntimeArtifact = agentcore.AgentRuntimeArtifact.fromAsset(
+      path.join(__dirname, "../assets/claude-agent")
+    );
 
-    // example resource
-    // const queue = new sqs.Queue(this, 'BackendQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
+    const runtime = new agentcore.Runtime(this, "ClaudeAgentRuntime", {
+      runtimeName: "ClaudeAgent",
+      agentRuntimeArtifact: agentRuntimeArtifact,
+    });
+
+    const sonnetInferenceProfile = bedrock.CrossRegionInferenceProfile.fromConfig({
+      geoRegion: bedrock.CrossRegionInferenceProfileRegion.GLOBAL,
+      model: bedrock.BedrockFoundationModel.ANTHROPIC_CLAUDE_SONNET_4_5_V1_0
+    });
+    sonnetInferenceProfile.grantInvoke(runtime);
+
+    const haikuInferenceProfile = bedrock.CrossRegionInferenceProfile.fromConfig({
+      geoRegion: bedrock.CrossRegionInferenceProfileRegion.GLOBAL,
+      model: bedrock.BedrockFoundationModel.ANTHROPIC_CLAUDE_HAIKU_4_5_V1_0
+    });
+    haikuInferenceProfile.grantInvoke(runtime);
+
+    new cdk.CfnOutput(this, "AgentRuntimeArn", {
+      value: runtime.agentRuntimeArn
+    })
+
   }
 }

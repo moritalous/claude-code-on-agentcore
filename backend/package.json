@@ -8,7 +8,9 @@
     "build": "tsc",
     "watch": "tsc -w",
     "test": "jest",
-    "cdk": "cdk"
+    "cdk": "npx cdk",
+    "deploy": "npx cdk deploy",
+    "setup-qemu": "docker run --privileged --rm tonistiigi/binfmt --install all"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",

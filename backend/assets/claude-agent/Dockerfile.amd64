@@ -1,0 +1,52 @@
+FROM ghcr.io/astral-sh/uv:python3.13-trixie
+
+RUN apt-get update && apt-get install -y \
+    pandoc \
+    libreoffice \
+    poppler-utils \
+    curl \
+    fonts-noto-cjk \
+    fonts-ipafont \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN groupadd -g 1000 appuser && useradd -u 1000 -g 1000 -m appuser
+
+RUN mkdir -p /work && chown -R 1000:1000 /work
+
+USER appuser
+
+RUN mkdir -p /work/input /work/output
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+ENV BASH_ENV=/home/appuser/.bash_env
+RUN touch "${BASH_ENV}" && echo '. "${BASH_ENV}"' >> ~/.bashrc
+
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | PROFILE="${BASH_ENV}" bash
+RUN . "${BASH_ENV}" && nvm install --lts
+
+RUN . "${BASH_ENV}" && npm install -g \
+    @anthropic-ai/claude-code \
+    pptxgenjs \
+    playwright \
+    react-icons \
+    react \
+    react-dom \
+    sharp \
+    docx
+
+ENV CLAUDE_CODE_USE_BEDROCK=1\
+    ANTHROPIC_DEFAULT_SONNET_MODEL=global.anthropic.claude-haiku-4-5-20251001-v1:0\
+    ANTHROPIC_DEFAULT_HAIKU_MODEL=global.anthropic.claude-haiku-4-5-20251001-v1:0 \
+    MAX_THINKING_TOKENS=1024 \
+    MCP_TIMEOUT=600000 \
+    MCP_TOOL_TIMEOUT=600000
+
+WORKDIR /app
+COPY --chown=1000:1000 app/pyproject.toml app/uv.lock ./
+RUN uv sync --frozen
+
+COPY --chown=1000:1000 app/.claude ./.claude
+COPY --chown=1000:1000 app/.mcp.json app/main.py ./
+
+CMD ["uv", "run", "opentelemetry-instrument", "python", "main.py"]

@@ -1,0 +1,19 @@
+services:
+  claude-agents:
+    build:
+      context: .
+      dockerfile: Dockerfile.amd64
+      # dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./app/main.py:/app/main.py
+      - ~/.aws:/home/appuser/.aws:ro
+    environment:
+      - AGENT_OBSERVABILITY_ENABLED=true
+      - OTEL_PYTHON_DISTRO=aws_distro
+      - OTEL_PYTHON_CONFIGURATOR=aws_configurator
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=claude-agent,aws.log.group.names=/aws/bedrock-agentcore/local/claude-agent
+      - OTEL_EXPORTER_OTLP_LOGS_HEADERS=x-aws-log-group=/aws/bedrock-agentcore/local/claude-agent,x-aws-log-stream=runtime-logs,x-aws-metric-namespace=bedrock-agentcore
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+      - OTEL_TRACES_EXPORTER=otlp
