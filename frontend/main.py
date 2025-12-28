@@ -44,12 +44,14 @@ if input := st.chat_input(accept_file=True):
     }
 
     def process_streaming_response(stream_iter):
+        status = st.status("processing...", expanded=True)
         for chunk in stream_iter:
             if chunk:
                 event = json.loads(chunk[6:])
                 if "message" in event and event["message"]:
                     message = json.loads(event["message"])
                     if message["type"] == "ResultMessage":
+                        status.update(state="complete", expanded=False)
                         with st.chat_message("assistant"):
                             st.write(message["result"])
                         st.session_state["messages"].append(
@@ -59,7 +61,7 @@ if input := st.chat_input(accept_file=True):
                             {"role": "assistant", "content": message["result"]}
                         )
                     else:
-                        with st.expander(message["type"], expanded=False):
+                        with status.expander(message["type"], expanded=False):
                             st.json(message)
                 if "output" in event and event["output"]:
                     st.session_state["output"] = event["output"]
