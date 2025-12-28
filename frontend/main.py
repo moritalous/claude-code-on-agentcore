@@ -36,7 +36,10 @@ if input := st.chat_input(accept_file=True):
     with st.chat_message("user"):
         st.write(prompt)
 
-    request_files = [{"filename": f.name, "bytes": f.getvalue()} for f in files]
+    request_files = [
+        {"filename": f.name, "bytes": base64.b64encode(f.getvalue()).decode()}
+        for f in files
+    ]
 
     request_body = {
         "prompt": prompt,
@@ -50,8 +53,9 @@ if input := st.chat_input(accept_file=True):
                 event = json.loads(chunk[6:])
                 if "message" in event and event["message"]:
                     message = json.loads(event["message"])
+                    with status.expander(message["type"], expanded=False):
+                        st.json(message)
                     if message["type"] == "ResultMessage":
-                        status.update(state="complete", expanded=False)
                         with st.chat_message("assistant"):
                             st.write(message["result"])
                         st.session_state["messages"].append(
@@ -60,11 +64,9 @@ if input := st.chat_input(accept_file=True):
                         st.session_state["messages"].append(
                             {"role": "assistant", "content": message["result"]}
                         )
-                    else:
-                        with status.expander(message["type"], expanded=False):
-                            st.json(message)
                 if "output" in event and event["output"]:
                     st.session_state["output"] = event["output"]
+        status.update(state="complete", expanded=False)
 
     if LOCALMODE:
         with httpx.stream(
@@ -73,7 +75,7 @@ if input := st.chat_input(accept_file=True):
             headers={
                 "X-Amzn-Bedrock-AgentCore-Runtime-Session-Id": st.session_state.session_id
             },
-            timeout=httpx.Timeout(timeout=120.0),
+            timeout=httpx.Timeout(timeout=600.0),
             json=request_body,
         ) as stream:
             process_streaming_response(stream.iter_lines())
