@@ -29,6 +29,14 @@ export class BackendStack extends cdk.Stack {
     });
     haikuInferenceProfile.grantInvoke(runtime);
 
+    runtime.grant([
+      "aws-mcp:InvokeMcp",
+      "aws-mcp:CallReadOnlyTool",
+      // "aws-mcp:CallReadWriteTool",
+    ], [
+      "*"
+    ])
+
     new cdk.CfnOutput(this, "AgentRuntimeArn", {
       value: runtime.agentRuntimeArn
     })
