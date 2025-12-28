@@ -5,6 +5,8 @@ RUN apt-get update && apt-get install -y \
     libreoffice \
     poppler-utils \
     curl \
+    nodejs \
+    npm \
     fonts-noto-cjk \
     fonts-ipafont \
     && rm -rf /var/lib/apt/lists/*
@@ -17,15 +19,13 @@ USER appuser
 
 RUN mkdir -p /work/input /work/output
 
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+RUN mkdir ~/.npm-global
+RUN npm config set prefix '~/.npm-global'
 
-ENV BASH_ENV=/home/appuser/.bash_env
-RUN touch "${BASH_ENV}" && echo '. "${BASH_ENV}"' >> ~/.bashrc
+ENV PATH=~/.npm-global/bin:$PATH\
+    NODE_PATH=/home/appuser/.npm-global/lib/node_modules
 
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | PROFILE="${BASH_ENV}" bash
-RUN . "${BASH_ENV}" && nvm install --lts
-
-RUN . "${BASH_ENV}" && npm install -g \
+RUN npm install -g \
     @anthropic-ai/claude-code \
     pptxgenjs \
     playwright \
@@ -36,8 +36,10 @@ RUN . "${BASH_ENV}" && npm install -g \
     docx
 
 ENV CLAUDE_CODE_USE_BEDROCK=1\
-    ANTHROPIC_DEFAULT_SONNET_MODEL=global.anthropic.claude-haiku-4-5-20251001-v1:0\
+    ANTHROPIC_MODEL=haiku \
+    ANTHROPIC_DEFAULT_SONNET_MODEL=global.anthropic.claude-sonnet-4-5-20250929-v1:0\
     ANTHROPIC_DEFAULT_HAIKU_MODEL=global.anthropic.claude-haiku-4-5-20251001-v1:0 \
+    CLAUDE_CODE_SUBAGENT_MODEL=haiku \
     MAX_THINKING_TOKENS=1024 \
     MCP_TIMEOUT=600000 \
     MCP_TOOL_TIMEOUT=600000
