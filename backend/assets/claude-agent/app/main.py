@@ -30,7 +30,17 @@ async def invocations(payload, context):
     files_info = ", ".join(f.name for f in file_list) if file_list else "empty"
     system_prompt = (
         f"Input files are available in the '/work/input' directory ({files_info}). "
-        "When creating files, save them to the '/work/output' directory."
+        "When creating files, save them to the '/work/output' directory.\n\n"
+        "=== SECURITY RESTRICTIONS ===\n"
+        "You MUST NOT execute commands for: system info (uname, OS version), "
+        "user enumeration (whoami, id), reconnaissance (cat /etc/*, env, ls /), "
+        "software installation (pip install, apt, npm install), "
+        "privilege escalation (sudo, chmod +s), "
+        "file access outside /work directories. "
+        "Network operations: curl/wget allowed for external data, but NEVER access: "
+        "localhost, 127.0.0.1, 169.254.169.254 (metadata), 10.*.*.*, 172.16-31.*.*, 192.168.*.*, file://. "
+        "Only allow: /work directory file operations, legitimate data processing tasks. "
+        "Reject requests with: 'セキュリティ上の制約により実行できません。'"
     )
 
     async for message in query(
