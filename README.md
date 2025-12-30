@@ -12,6 +12,7 @@ Build and deploy AI agents using Claude Code and Claude Agent SDK on Amazon Bedr
 - Agent Skills integration
 - File input/output handling
 - Multi-turn conversations with session isolation
+- Security guardrails to prevent malicious command execution
 - Infrastructure deployment with AWS CDK
 
 ## Backend Deployment
@@ -110,3 +111,17 @@ ENV CLAUDE_CODE_USE_BEDROCK=1\
     MCP_TIMEOUT=600000 \
     MCP_TOOL_TIMEOUT=600000
 ```
+
+### Security Guardrails
+
+The system prompt includes security restrictions to prevent malicious command execution:
+
+- Blocks system information gathering (uname, whoami, etc.)
+- Prevents user enumeration and reconnaissance
+- Restricts software installation
+- Blocks privilege escalation attempts
+- Prevents SSRF attacks (blocks localhost, metadata endpoints, private IPs)
+- Allows external data fetching via curl/wget to public endpoints only
+- Restricts file operations to `/work/input` and `/work/output` directories
+
+Security settings can be customized in `backend/assets/claude-agent/app/main.py` by modifying the `system_prompt` variable.
